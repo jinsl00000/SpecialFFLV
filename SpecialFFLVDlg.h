@@ -47,28 +47,31 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	CMFCEditBrowseCtrl m_fflvinputurl;
-	CButton m_fflvoutputa;
-	CButton m_fflvoutputv;
 	CMFCPropertyGridCtrl m_fflvbasicinfo;
 	afx_msg void OnBnClickedFFlvInputurlOpen();
 	char fileurl[MAX_URL_LENGTH];
 	CListCtrl m_fflvtaglist;
 	CMFCPropertyGridProperty *Headergroup;
 	CMFCPropertyGridProperty *TagData_fbgroup;
-	int AppendTLInfo(int type,int datasize,int timestamp,int streamid);
+	CMFCPropertyGridProperty *ScriptData_fbgroup;
+	int AppendTLInfo(int type,int datasize,int timestamp,int streamid, int keyframe);
 	int AppendBInfo(CString dst_group,CString property_name,CString value,CString remark);
 	int ShowBInfo();
 	int tl_index;
 	int ParseTagData_fb(int type,char data_f_b);
+	int ParseScriptData(const char * meta, int meta_size);
+	int ParseScriptType(const char * meta, const char * name);
+	int ParseScriptArrayData(const char * meta);
 	void SystemClear();
 	//-----------------
 	void OnCustomdrawMyList ( NMHDR* pNMHDR, LRESULT* pResult );
 	CButton m_fflvtaglistmaxnum;
+	CButton m_fflvtaglist_onlykey;
+	CButton m_fflvtaglist_onlyvideo;
+
 	afx_msg void OnBnClickedFFlvAbout();
 	//-------
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	//专门用于加载字符串
 	CString text;
-	CComboBox m_fflvlang;
-	afx_msg void OnSelchangeFFlvLang();
 };

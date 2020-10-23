@@ -26,6 +26,7 @@
 //************ Constants
 #define TAG_TYPE_AUDIO 8
 #define TAG_TYPE_VIDEO 9
+#define TAG_TYPE_SCRIPT 18
 #define CUE_BLOCK_SIZE 32
 #define FLAG_SEPARATE_AV 1
 
@@ -49,9 +50,18 @@ typedef struct {
 	uint Reserved;
 } FLV_TAG;
 
+typedef struct {
+	byte TagType;
+	ui_24 DataSize;
+	ui_24 Timestamp;
+	byte TimestampExtend;
+	ui_24 StreamID;
+} FLV_TAG_NEW;
+
 CSpecialFFLVDlg *dlg;
-int fist_time_a=0;
-int fist_time_v=0;
+int fist_time_a = 0;
+int fist_time_v = 0;
+int fist_time_s = 0;
 
 //********** local function prototypes
 uint copymem(char *destination, char *source, uint byte_count);
@@ -91,7 +101,7 @@ void processfile(char *in_file, char *cue_file){
 	//-------------
 	FILE *ifh=NULL, *cfh=NULL, *vfh=NULL, *afh = NULL;
 	FLV_HEADER flv;
-	FLV_TAG tag;
+	FLV_TAG_NEW tag;
 	FLV_PREV_TAG_SIZE pts, pts_z=0;
 	uint *cue, ts=0, ts_new=0, ts_offset=0, ptag=0;
 	
@@ -130,139 +140,74 @@ void processfile(char *in_file, char *cue_file){
 	fseek(ifh, reverse_bytes((byte *)&flv.DataOffset, sizeof(flv.DataOffset)), SEEK_SET);
 
 	//process each tag in the file
+	//process each tag in the file
 	do {
-
 		//capture the PreviousTagSize integer
 		pts = _getw(ifh);
-		
 		//extract the tag from the input file
-		fget(ifh, (char *)&tag, sizeof(FLV_TAG));
+		fget(ifh, (char *)&tag, sizeof(FLV_TAG_NEW));
+		if (feof(ifh))
+			break;
 		//输出Tag信息-----------------------
-		int temp_datasize=tag.DataSize[0]*65536+tag.DataSize[1]*256+tag.DataSize[2];
-		int temp_timestamp=tag.Timestamp[0]*65536+tag.Timestamp[1]*256+tag.Timestamp[2];
+		int temp_datasize = tag.DataSize[0] * 65536 + tag.DataSize[1] * 256 + tag.DataSize[2];
+		int temp_timestamp = tag.TimestampExtend * 16777216 + tag.Timestamp[0] * 65536 + tag.Timestamp[1] * 256 + tag.Timestamp[2];
+		int temp_StreamID = tag.StreamID[0] * 65536 + tag.StreamID[1] * 256 + tag.StreamID[2];
+
 		//还需要获取TagData的第一个字节---------------------------------
-		//char temp_tag_f_b;
-		//fget(ifh,&temp_tag_f_b,1);
-		//倒回去，不影响下面的操作
-		//fseek(ifh, -1, SEEK_CUR);
-		//----------------------------------
-		dlg->AppendTLInfo(tag.TagType,temp_datasize,temp_timestamp,tag.Reserved);
-		//set the tag value to select on
-		ptag = tag.TagType;
-
-		//if we are not separating AV, process the audio like video
-		if (!(flags && FLAG_SEPARATE_AV)) ptag = TAG_TYPE_VIDEO;
-
-		//if we are not past the end of file, process the tag
-		if (!feof(ifh)) {
-			
-			//if we've exceed the cuepoint then close output files and select next cuepoint
-			if (reverse_bytes((byte *)&tag.Timestamp, sizeof(tag.Timestamp)) > cue[current]) {
-				
-				//close any audio file and designated closed with NULL
-				if (afh != NULL){ fclose(afh); afh = NULL; }
-				
-				//close any video file and designated closed with NULL
-				if (vfh != NULL){ fclose(vfh); vfh = NULL; }
-				
-				//increment the current slide
-				current++;
-
-				//provide feedback to the user
-				printf("Processing slide %i...\n", current);
-			}
-			
-			//process tag by type
-			switch (ptag) {
-
-				case TAG_TYPE_AUDIO:  //we only process like this if we are separating audio into an mp3 file
-					//还需要获取TagData的第一个字节---------------------------------
-					if(fist_time_a==0){
-						char temp_tag_f_b;
-						fget(ifh,&temp_tag_f_b,1);
-						dlg->ParseTagData_fb(8,temp_tag_f_b);
-						//倒回去，不影响下面的操作
-						fseek(ifh, -1, SEEK_CUR);
-						fist_time_a=1;
-					}
-					//if the output file hasn't been opened, open it.
-					if(dlg->m_fflvoutputa.GetCheck()==1){
-						if (afh == NULL) afh = open_output_file(ptag);
-					}
-					
-					//jump past audio tag header byte
-					fseek(ifh, 1, SEEK_CUR);  
-
-					//决定是否输出
-					if(dlg->m_fflvoutputa.GetCheck()==1){
-					//dump the audio data to the output file
-						xfer(ifh, afh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize))-1);
-					}else{
-						xfer_empty(ifh, afh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize))-1);
-					}
-					break;
-
-				case TAG_TYPE_VIDEO:
-					//还需要获取TagData的第一个字节---------------------------------
-					if(fist_time_v==0){
-						char temp_tag_f_b;
-						fget(ifh,&temp_tag_f_b,1);
-						dlg->ParseTagData_fb(9,temp_tag_f_b);
-						//倒回去，不影响下面的操作
-						fseek(ifh, -1, SEEK_CUR);
-						fist_time_v=1;
-					}
-					//if the output file hasn't been opened, open it.
-					if (vfh == NULL) {
-
-						//get the new video output file pointer
-						if(dlg->m_fflvoutputv.GetCheck()==1){
-							//vfh = open_output_file(ptag);
-						}
-
-						//record the timestamp offset for this slice
-						ts_offset = reverse_bytes((byte *)&tag.Timestamp, sizeof(tag.Timestamp));
-				
-						//write the flv header (reuse the original file's hdr) and first pts
-						if(dlg->m_fflvoutputv.GetCheck()==1){
-							vfh = open_output_file(ptag);
-							fput(vfh, (char *)&flv, sizeof(flv));
-							fput(vfh, (char *)&pts_z, sizeof(pts_z));
-						}
-					}
-					
-					//offset the timestamp in the tag
-					ts = reverse_bytes((byte *)&tag.Timestamp, sizeof(tag.Timestamp)) - ts_offset;
-					
-					//reverse the timestamp bytes back into BigEndian
-					ts_new = reverse_bytes((byte *)&ts, sizeof(ts));
-					
-					//overwrite the highest 3 bytes of the integer into the timestamp
-					copymem((char *)&tag.Timestamp, (char *)(((char *)&ts_new) + 1), sizeof(tag.Timestamp));
-
-					//write tag to output file
-					if(dlg->m_fflvoutputv.GetCheck()==1){
-						fput(vfh, (char *)&tag, sizeof(tag));
-					}
-					//决定是否输出
-					if(dlg->m_fflvoutputv.GetCheck()==1){
-					//dump the video data to the output file, including the PTS field
-						xfer(ifh, vfh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize))+4);
-					}else{
-						xfer_empty(ifh, vfh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize))+4);
-					}
-					//rewind 4 bytes, because we need to read the PTS again for the loop's sake
-					fseek(ifh, -4, SEEK_CUR);
-
-					break;
-
-				default:
-
-					//skip the data of this tag
-					fseek(ifh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize)), SEEK_CUR);
+		int video_type = 0;
+		if (tag.TagType == TAG_TYPE_VIDEO)
+		{
+			char temp_tag_f_b;
+			fget(ifh, &temp_tag_f_b, 1);
+			video_type = (temp_tag_f_b >> 4) & 0xF;
+			//倒回去，不影响下面的操作
+			fseek(ifh, -1, SEEK_CUR);
+			if (fist_time_v == 0) {
+				dlg->ParseTagData_fb(9, temp_tag_f_b);
+				fist_time_v = 1;
 			}
 		}
+		else if (tag.TagType == TAG_TYPE_AUDIO)
+		{
+			if (fist_time_a == 0) {
+				char temp_tag_f_b;
+				fget(ifh, &temp_tag_f_b, 1);
+				dlg->ParseTagData_fb(8, temp_tag_f_b);
+				//倒回去，不影响下面的操作
+				fseek(ifh, -1, SEEK_CUR);
+				fist_time_a = 1;
+			}
+		}
+		else if (tag.TagType == TAG_TYPE_SCRIPT)
+		{
+#if 0
+			fist_time_s = 0;
+			if (fist_time_s == 0) {
 
+				fist_time_s = 1;
+				int metasize = reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize));
+				char *meta_date = new char[metasize];
+				memset(meta_date, 0, metasize);
+				fget(ifh, meta_date, metasize);
+				fseek(ifh, -metasize, SEEK_CUR);
+
+				FILE * fm = fopen("./xxx.dat", "wb");
+				fwrite(meta_date, metasize, 1, fm);
+				fclose(fm);
+
+				dlg->ParseScriptData(meta_date, metasize);
+				delete[]meta_date;
+			}
+#endif			
+
+		}
+		//-----------------------------
+
+		dlg->AppendTLInfo(tag.TagType, temp_datasize, temp_timestamp, temp_StreamID, video_type);
+		//skip the data of this tag
+		//if (!feof(ifh)) {
+			fseek(ifh, reverse_bytes((byte *)&tag.DataSize, sizeof(tag.DataSize)), SEEK_CUR);
+		//}
 	} while (!feof(ifh));
 	
 	//finished...close all file pointers

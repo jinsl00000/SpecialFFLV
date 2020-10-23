@@ -14,6 +14,7 @@
  * 
  * 
  */
+#include <stdint.h>
 #include "stdafx.h"
 #include "SpecialFFLV.h"
 #include "SpecialFFLVDlg.h"
@@ -70,12 +71,11 @@ void CSpecialFFLVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_F_FLV_INPUTURL, m_fflvinputurl);
-	DDX_Control(pDX, IDC_F_FLV_OUTPUT_A, m_fflvoutputa);
-	DDX_Control(pDX, IDC_F_FLV_OUTPUT_V, m_fflvoutputv);
 	DDX_Control(pDX, IDC_F_FLV_BASICINFO, m_fflvbasicinfo);
 	DDX_Control(pDX, IDC_F_FLV_TAGLIST, m_fflvtaglist);
 	DDX_Control(pDX, IDC_F_FLV_TAGLIST_MAXNUM, m_fflvtaglistmaxnum);
-	DDX_Control(pDX, IDC_F_FLV_LANG, m_fflvlang);
+	DDX_Control(pDX, IDC_F_FLV_TAGLIST_ONLYKEY, m_fflvtaglist_onlykey);
+	DDX_Control(pDX, IDC_F_FLV_TAGLIST_ONLYVIDEO, m_fflvtaglist_onlyvideo);
 }
 
 BEGIN_MESSAGE_MAP(CSpecialFFLVDlg, CDialogEx)
@@ -86,7 +86,6 @@ BEGIN_MESSAGE_MAP(CSpecialFFLVDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DROPFILES()
-	ON_CBN_SELCHANGE(IDC_F_FLV_LANG, &CSpecialFFLVDlg::OnSelchangeFFlvLang)
 END_MESSAGE_MAP()
 
 
@@ -134,7 +133,8 @@ BOOL CSpecialFFLVDlg::OnInitDialog()
 	m_fflvtaglist.InsertColumn(3,text,LVCFMT_CENTER,100,0);
 	text.LoadString(IDS_LIST_TITLE_STREAMID);
 	m_fflvtaglist.InsertColumn(4,text,LVCFMT_CENTER,95,0);
-
+	text.LoadString(IDS_LIST_DATA_TYPE_VIDEO_KEY);
+	m_fflvtaglist.InsertColumn(5, text, LVCFMT_CENTER, 0, 0);
 
 	//Propertylist初始化------------------------
 	m_fflvbasicinfo.EnableHeaderCtrl(FALSE);
@@ -150,6 +150,7 @@ BOOL CSpecialFFLVDlg::OnInitDialog()
 	//----
 	Headergroup=new CMFCPropertyGridProperty(_T("File Header"));
 	TagData_fbgroup=new CMFCPropertyGridProperty(_T("TagData Header"));
+	ScriptData_fbgroup = new CMFCPropertyGridProperty(_T("ScriptData"));
 	//-----------
 	tl_index=0;
 	m_fflvtaglistmaxnum.SetCheck(1);
@@ -164,8 +165,8 @@ BOOL CSpecialFFLVDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-	m_fflvlang.InsertString(0,_T("Chinese"));
-	m_fflvlang.InsertString(1,_T("English"));
+	//m_fflvlang.InsertString(0,_T("Chinese"));
+	//m_fflvlang.InsertString(1,_T("English"));
 
 	_CrtSetBreakAlloc(822);
 
@@ -258,12 +259,12 @@ void CSpecialFFLVDlg::OnBnClickedFFlvInputurlOpen()
 }
 //添加一条记录
 //每个字段的含义：类型，数据大小，时间戳，streamid，data的第一个字节
-int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int streamid){
+int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int streamid, int keyframe){
 	//如果选择了“最多输出5000条”，判断是否超过5000条
 	if(m_fflvtaglistmaxnum.GetCheck()==1&&tl_index>5000){
 		return 0;
 	}
-	CString temp_index,temp_type,temp_datasize,temp_timestamp,temp_streamid;
+	CString temp_index,temp_type,temp_datasize,temp_timestamp,temp_streamid, temp_keyframe;
 	int nIndex=0;
 	switch(type){
 	case 8:
@@ -275,42 +276,53 @@ int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int stream
 	default:
 		text.LoadString(IDS_UNKNOWN);break;
 	}
-	temp_type.Format(_T("%s"),text);
-	temp_index.Format(_T("%d"),tl_index);
-	temp_datasize.Format(_T("%d"),datasize);
-	temp_timestamp.Format(_T("%d"),timestamp);
-	temp_streamid.Format(_T("%d"),streamid);
-	//获取当前记录条数
-	nIndex=m_fflvtaglist.GetItemCount();
-	//“行”数据结构
-	LV_ITEM lvitem;
-	lvitem.mask=LVIF_TEXT;
-	lvitem.iItem=nIndex;
-	lvitem.iSubItem=0;
-	//注：vframe_index不可以直接赋值！
-	//务必使用f_index执行Format!再赋值！
-	lvitem.pszText=temp_index.GetBuffer();
-	//------------------------
-	m_fflvtaglist.InsertItem(&lvitem);
-	m_fflvtaglist.SetItemText(nIndex,1,temp_type);
-	m_fflvtaglist.SetItemText(nIndex,2,temp_datasize);
-	m_fflvtaglist.SetItemText(nIndex,3,temp_timestamp);
-	m_fflvtaglist.SetItemText(nIndex,4,temp_streamid);
-	tl_index++;
+	if ((m_fflvtaglist_onlykey.GetCheck() == 0 || (m_fflvtaglist_onlykey.GetCheck() == 1 && keyframe==1)) && (m_fflvtaglist_onlyvideo.GetCheck() == 0 ||(m_fflvtaglist_onlyvideo.GetCheck() == 1 && type == 9)))
+	{
+		temp_type.Format(_T("%s"), text);
+		temp_index.Format(_T("%d"), tl_index);
+		temp_datasize.Format(_T("%d"), datasize);
+		temp_timestamp.Format(_T("%d"), timestamp);
+		temp_streamid.Format(_T("%d"), streamid);
+		temp_keyframe.Format(_T("%d"), keyframe);
+		//获取当前记录条数
+		nIndex = m_fflvtaglist.GetItemCount();
+		//“行”数据结构
+		LV_ITEM lvitem;
+		lvitem.mask = LVIF_TEXT;
+		lvitem.iItem = nIndex;
+		lvitem.iSubItem = 0;
+		//注：vframe_index不可以直接赋值！
+		//务必使用f_index执行Format!再赋值！
+		lvitem.pszText = temp_index.GetBuffer();
+		//------------------------
+		m_fflvtaglist.InsertItem(&lvitem);
+		m_fflvtaglist.SetItemText(nIndex, 1, temp_type);
+		m_fflvtaglist.SetItemText(nIndex, 2, temp_datasize);
+		m_fflvtaglist.SetItemText(nIndex, 3, temp_timestamp);
+		m_fflvtaglist.SetItemText(nIndex, 4, temp_streamid);
+		m_fflvtaglist.SetItemText(nIndex, 5, temp_keyframe);
+		tl_index++;
+	}
+	
 	return TRUE;
 }
 int CSpecialFFLVDlg::AppendBInfo(CString dst_group,CString property_name,CString value,CString remark){
 	if(dst_group.Compare(_T("Header"))==0){
 		Headergroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
-	}if(dst_group.Compare(_T("TagData_fb"))==0){
+	}else if(dst_group.Compare(_T("TagData_fb"))==0){
 		TagData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
-	}else{
+	}else if (dst_group.Compare(_T("ScriptData")) == 0) {
+		ScriptData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
+	}
+	else {
+
 	}
 	return TRUE;
 }
 int CSpecialFFLVDlg::ShowBInfo(){
 	m_fflvbasicinfo.AddProperty(Headergroup);
 	m_fflvbasicinfo.AddProperty(TagData_fbgroup);
+	m_fflvbasicinfo.AddProperty(ScriptData_fbgroup);
 	return TRUE;
 }
 //解析TagData的第一个字节
@@ -419,13 +431,384 @@ int CSpecialFFLVDlg::ParseTagData_fb(int type,char data_f_b){
 	return 0;
 }
 
+typedef union endian_checker endian_checker_t;
+
+union endian_checker
+{
+	long endian_value;
+	char byte_array[sizeof(long)];
+};
+static endian_checker_t EndianChecker = { 1 };
+
+
+int is_little_endian(void)
+{
+	return EndianChecker.byte_array[0];
+}
+
+
+double read_be64double(unsigned char *data)
+{
+	double value;
+	unsigned char number_data[8];
+
+	if (is_little_endian())
+	{
+		number_data[0] = data[7];
+		number_data[1] = data[6];
+		number_data[2] = data[5];
+		number_data[3] = data[4];
+		number_data[4] = data[3];
+		number_data[5] = data[2];
+		number_data[6] = data[1];
+		number_data[7] = data[0];
+		memmove(&value, number_data, 8);
+	}
+	else
+	{
+		memmove(&value, data, 8);
+	}
+
+	return value;
+}
+
+int CSpecialFFLVDlg::ParseScriptArrayData(const char * meta)
+{
+	int ecma_array_len = 0;
+	int keyname_len = 0;
+	char keyname[32];
+	const char *p = meta;
+	int i = 0;
+
+	ecma_array_len |= *p;
+	p++;
+	ecma_array_len = ecma_array_len << 8;
+	ecma_array_len |=*p;
+	p++;
+	ecma_array_len = ecma_array_len << 8;
+	ecma_array_len |= *p;
+	p++;
+	ecma_array_len = ecma_array_len << 8;
+	ecma_array_len |= *p;
+	p++;
+
+	for (i = 0; i < ecma_array_len; i++) {
+		keyname_len = 0;
+		keyname_len |= *p;
+		p++;
+		keyname_len = keyname_len << 8;
+		keyname_len |= *p;
+		p++;
+
+		memset(keyname, 0, sizeof(keyname));
+		strncpy((char *)keyname, (const char *)p, keyname_len);
+		p += keyname_len;
+		p += ParseScriptType(p, keyname);
+	}
+
+	if (*p == 0 && *(p + 1) == 0 && *(p + 2) == 9) {
+		p += 3;
+	}
+	return p - meta;
+
+}
+
+enum script_data_type {
+	Number = 0,
+	Boolean,
+	String,
+	Object,
+	MovieClip,
+	Null,
+	Undefined,
+	Reference,
+	EcmaArray,
+	ObjectEndMarker,
+	StringArray,
+	Date,
+	LongString,
+};
+
+int CSpecialFFLVDlg::ParseScriptType(const char * meta, const char * name)
+{
+	int ret = 0;
+	const char *p = meta;
+	char string_output[512];
+	unsigned long long number = 0;
+	double double_number = 0.0;
+
+	double numValue = 0;
+	bool boolValue = false;
+	CString strOutTemp;
+	CString strTemp;
+	CString strLongTemp;
+
+	switch (*p) {
+	case Number:
+		p++;
+		numValue = read_be64double((unsigned char *)(p));
+		strOutTemp.Format("%.2f", numValue);
+		p += 8;
+		break;
+
+	case Boolean:
+		p++;
+		if (*p != 0x00) {
+			boolValue = true;
+		}
+		strOutTemp.Format("%s", boolValue ? "true" : "false");
+
+		p++;
+		break;
+
+	case String:
+		p++;
+		ret |= *p;
+		p++;
+		ret = ret << 8;
+		ret |= *p;
+		p++;
+		memset(string_output, 0, sizeof(string_output));
+		strncpy((char *)string_output, (const char *)(p), ret);
+		strOutTemp = string_output;
+		p += ret;
+		break;
+
+	case Object:
+		p++;
+		break;
+
+	case MovieClip:
+		p++;
+		break;
+
+	case Null:
+		p++;
+		break;
+
+	case Undefined:
+		p++;
+		break;
+
+	case Reference:
+		p++;
+		break;
+
+	case EcmaArray:
+		p++;
+		ret = ParseScriptArrayData(p);
+		p += ret;
+		break;
+
+	case ObjectEndMarker:
+		p++;
+		break;
+
+	case StringArray:
+		p++;
+		break;
+
+	case Date:
+		p++;
+		break;
+
+	case LongString:
+		p++;
+		ret = 0;
+		ret |= *p;
+		p++;
+		ret = ret << 8;
+		ret |= *p;
+		p++;
+		ret = ret << 8;
+		ret |= *p;
+		p++;;
+		ret = ret << 8;
+		ret |= *p;
+		p++;
+		memset(string_output, 0, sizeof(string_output));
+		strncpy((char *)string_output, (const char *)(p), ret);
+		strOutTemp = string_output;
+		p += ret;
+		break;
+
+	default:
+
+		break;
+	}
+	if(NULL != name || strOutTemp.GetLength()>0)
+		AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
+	return p - meta;
+}
+
+int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
+{
+	const char * p = meta;
+	int ret = 0;
+	while (p) {
+		if (p - meta >= meta_size) {
+			break;
+		}
+		ret = ParseScriptType(p, "");
+		p += ret;
+	}
+	return p - meta;
+
+	unsigned int arrayLen = 0;
+	unsigned int offset = 13;
+	unsigned int nameLen = 0;
+	double numValue = 0;
+	bool boolValue = false;
+	unsigned char string_output[512];
+
+	if (meta[offset++] == 0x08) {
+
+		arrayLen |= meta[offset++];
+		arrayLen = arrayLen << 8;
+		arrayLen |= meta[offset++];
+		arrayLen = arrayLen << 8;
+		arrayLen |= meta[offset++];
+		arrayLen = arrayLen << 8;
+		arrayLen |= meta[offset++];
+
+		//cerr << "ArrayLen = " << arrayLen << endl;
+	}
+	else {
+		//TODO:
+		//cerr << "metadata format error!!!" << endl;
+		return -1;
+	}
+
+	for (unsigned int i = 0; i < arrayLen; i++) {
+		CString strOutTemp;
+		CString strTemp;
+		CString strLongTemp;
+
+		unsigned long long number = 0;
+		numValue = 0;
+		boolValue = false;
+		nameLen = 0;
+		nameLen |= meta[offset++];
+		nameLen = nameLen << 8;
+		nameLen |= meta[offset++];
+		//cerr << "name length=" << nameLen << " ";
+		unsigned char keyname[32];
+		memset(keyname, 0, sizeof(keyname));
+		strncpy((char *)keyname, (const char *)(meta+ offset), nameLen);
+	//	fprintf(stdout, "keyname = [%s]\n", keyname);
+		CString name(keyname);
+#ifdef DEBUG
+		printf("\norign \n");
+		for (unsigned int i = 0; i < nameLen + 3; i++) {
+			printf("%x ", meta[offset + i]);
+		}
+		printf("\n");
+#endif
+		offset += nameLen;
+		//cerr << "name=" << name << " ";
+#ifdef DEBUG
+		printf("memcpy\n");
+		for (unsigned int i = 0; i < nameLen; i++) {
+			printf("%x ", name[i]);
+		}
+		printf("\n");
+#endif
+		switch (meta[offset++]) {
+		case 0x0: //Number type
+			numValue = read_be64double((unsigned char *)(meta + offset));
+			strOutTemp.Format("%.2f", numValue);
+			offset += 8;
+			break;
+
+		case 0x1: //Boolean type
+			if (offset++ != 0x00) {
+				boolValue = true;
+			}
+			strOutTemp.Format("%s", boolValue?"true":"false");
+			break;
+
+		case 0x2: //String type
+			nameLen = 0;
+			nameLen |= meta[offset++];
+			nameLen = nameLen << 8;
+			nameLen |= meta[offset++];
+			strTemp = CString(meta[offset], nameLen);
+			memset(string_output, 0, sizeof(string_output));
+			strncpy((char *)string_output, (const char *)(meta+offset), nameLen);
+			strOutTemp = string_output;
+			offset += nameLen;
+			break;
+
+		case 0x12: //Long string type
+			nameLen = 0;
+			nameLen |= meta[offset++];
+			nameLen = nameLen << 8;
+			nameLen |= meta[offset++];
+			nameLen = nameLen << 8;
+			nameLen |= meta[offset++];
+			nameLen = nameLen << 8;
+			nameLen |= meta[offset++];
+			memset(string_output, 0, sizeof(string_output));
+			strncpy((char *)string_output, (const char *)(meta + offset), nameLen);
+			strOutTemp = string_output;
+			offset += nameLen;
+			break;
+
+			//FIXME:
+		default:
+			break;
+		}
+		AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
+
+#if 0
+		if (strncmp(name, "duration", 8) == 0) {
+			m_duration = numValue;
+		}
+		else if (strncmp(name, "width", 5) == 0) {
+			m_width = numValue;
+		}
+		else if (strncmp(name, "height", 6) == 0) {
+			m_height = numValue;
+		}
+		else if (strncmp(name, "framerate", 9) == 0) {
+			m_framerate = numValue;
+		}
+		else if (strncmp(name, "videodatarate", 13) == 0) {
+			m_videodatarate = numValue;
+		}
+		else if (strncmp(name, "audiodatarate", 13) == 0) {
+			m_audiodatarate = numValue;
+		}
+		else if (strncmp(name, "videocodecid", 12) == 0) {
+			m_videocodecid = numValue;
+		}
+		else if (strncmp(name, "audiosamplerate", 15) == 0) {
+			m_audiosamplerate = numValue;
+		}
+		else if (strncmp(name, "audiosamplesize", 15) == 0) {
+			m_audiosamplesize = numValue;
+		}
+		else if (strncmp(name, "audiocodecid", 12) == 0) {
+			m_audiocodecid = numValue;
+		}
+		else if (strncmp(name, "stereo", 6) == 0) {
+			m_stereo = boolValue;
+		}
+#endif
+	}
+	return 0;
+
+}
+
 void CSpecialFFLVDlg::SystemClear(){
 	Headergroup->RemoveAllOptions();
 	TagData_fbgroup->RemoveAllOptions();
+	ScriptData_fbgroup->RemoveAllOptions();
 
 
 	Headergroup=new CMFCPropertyGridProperty(_T("Header"));
 	TagData_fbgroup=new CMFCPropertyGridProperty(_T("TagData Header"));
+	ScriptData_fbgroup = new CMFCPropertyGridProperty(_T("ScriptData"));
 	m_fflvbasicinfo.RemoveAll();
 	m_fflvtaglist.DeleteAllItems();
 	tl_index=0;
@@ -462,14 +845,22 @@ void CSpecialFFLVDlg::OnCustomdrawMyList ( NMHDR* pNMHDR, LRESULT* pResult )
 		int    nItem = static_cast<int>( pLVCD->nmcd.dwItemSpec );
 
 		CString strTemp = m_fflvtaglist.GetItemText(nItem,1);
+		CString key_strTemp = m_fflvtaglist.GetItemText(nItem, 5);
 		CString text_video,text_audio,text_script;
 		text_video.LoadString(IDS_LIST_DATA_TYPE_VIDEO);
 		text_audio.LoadString(IDS_LIST_DATA_TYPE_AUDIO);
 		text_script.LoadString(IDS_LIST_DATA_TYPE_SCRIPT);
 
 		if(strTemp.Compare(text_video)==0){
-			clrNewTextColor = RGB(0,0,0);		//Set the text 
-			clrNewBkColor = RGB(0,255,255);		//青色
+			clrNewTextColor = RGB(0,0,0);		//Set the text
+			if (0 ==key_strTemp.Compare("1"))
+			{
+				clrNewBkColor = RGB(255, 0, 0);		//青色
+			}
+			else
+			{
+				clrNewBkColor = RGB(0, 255, 255);		//青色
+			}
 		}
 		else if(strTemp.Compare(text_audio)==0){
 			clrNewTextColor = RGB(0,0,0);		//text 
@@ -510,30 +901,4 @@ void CSpecialFFLVDlg::OnDropFiles(HDROP hDropInfo)
 	m_fflvinputurl.SetWindowText(pFilePathName);
 	::DragFinish(hDropInfo);   // 注意这个不能少，它用于释放Windows 为处理文件拖放而分配的内存
 	free(pFilePathName);
-}
-
-
-void CSpecialFFLVDlg::OnSelchangeFFlvLang()
-{
-	//配置文件路径
-	char conf_path[300]={0};
-	//获得exe绝对路径
-	GetModuleFileNameA(NULL,(LPSTR)conf_path,300);//
-	//获得exe文家夹路径
-	strrchr( conf_path, '\\')[0]= '\0';//
-	//_getcwd(realpath,MYSQL_S_LENGTH);
-	printf("%s",conf_path);
-	strcat(conf_path,"\\configure.ini");
-	//写入配置文件
-	switch(m_fflvlang.GetCurSel()){
-	case 0:WritePrivateProfileStringA("Settings","language","Chinese",conf_path);break;
-	case 1:WritePrivateProfileStringA("Settings","language","English",conf_path);break;
-	default:break;
-	}
-	//重启软件
-	char exe_path[300]={0};
-	//获得exe绝对路径
-	GetModuleFileNameA(NULL,(LPSTR)exe_path,300);
-	ShellExecuteA( NULL,"open",exe_path,NULL,NULL,SW_SHOWNORMAL);
-	OnCancel();
 }
