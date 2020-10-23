@@ -3,3 +3,7 @@ Debug/
 Release/
 #¹ıÂË
 *.sdf
+.vs/
+ipch/
+*.db
+*.dat
