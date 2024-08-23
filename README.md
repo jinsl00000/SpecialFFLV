@@ -1,6 +1,6 @@
 # SpecialFFLV
 
-fork form https://github.com/almondyoung/SpecialFFLV
+forked form https://github.com/almondyoung/SpecialFFLV
 
 FLV 格式分析器
 FLV Format Analysis
