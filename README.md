@@ -1,10 +1,15 @@
 # SpecialFFLV
 
-fork from https://blog.csdn.net/leixiaohua1020/article/details/84519384
+fork form https://github.com/almondyoung/SpecialFFLV
 
-todo:
-1.分析script
-2.支持使用yamdi增加metadata信息
-3.支持输出音视频裸流
-4.支持显示分析cts，pts
-5.分析更多内容。。。
+FLV 格式分析器
+FLV Format Analysis
+
+雷霄骅 Lei Xiaohua
+leixiaohua1020@126.com
+中国传媒大学/数字电视技术
+Communication University of China / Digital TV Technology
+http://blog.csdn.net/leixiaohua1020
+
+FLV封装格式分析工具
+FLV Container Format Analysis Tools
