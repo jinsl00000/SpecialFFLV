@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * FLV 格式分析器
  * FLV Format Analysis
  *
@@ -8,11 +8,11 @@
  * 中国传媒大学/数字电视技术
  * Communication University of China / Digital TV Technology
  * http://blog.csdn.net/leixiaohua1020
- * 
+ *
  * FLV封装格式分析工具
  * FLV Container Format Analysis Tools
- * 
- * 
+ *
+ *
  */
 #include "stdafx.h"
 #include "SpecialFFLV.h"
@@ -24,7 +24,7 @@
 #endif
 
 
-// CSpecialFFLVApp
+ // CSpecialFFLVApp
 
 BEGIN_MESSAGE_MAP(CSpecialFFLVApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
@@ -69,7 +69,7 @@ BOOL CSpecialFFLVApp::InitInstance()
 
 	// 创建 shell 管理器，以防对话框包含
 	// 任何 shell 树视图控件或 shell 列表视图控件。
-	CShellManager *pShellManager = new CShellManager;
+	CShellManager* pShellManager = new CShellManager;
 
 	// 标准初始化
 	// 如果未使用这些功能并希望减小
@@ -111,24 +111,30 @@ BOOL CSpecialFFLVApp::InitInstance()
 void CSpecialFFLVApp::LoadLaguage()
 {
 	//配置文件路径
-	char conf_path[300]={0};
+	char conf_path[300] = { 0 };
 	//获得exe绝对路径
-	GetModuleFileNameA(NULL,(LPSTR)conf_path,300);//
+	GetModuleFileNameA(NULL, (LPSTR)conf_path, 300);//
 	//获得exe文家夹路径
-	strrchr( conf_path, '\\')[0]= '\0';//
-	printf("%s",conf_path);
-	strcat(conf_path,"\\configure.ini");
+	strrchr(conf_path, '\\')[0] = '\0';//
+	printf("%s", conf_path);
+	strcat(conf_path, "\\configure.ini");
 	//存储属性的字符串
-	char conf_val[300]={0};
+	char conf_val[300] = { 0 };
 
-	if((_access(conf_path, 0 )) == -1 ){  
+	if ((_access(conf_path, 0)) == -1)
+	{
 		//配置文件不存在，直接返回
 		return;
-	}else{
-		GetPrivateProfileStringA("Settings","language",NULL,conf_val,300,conf_path);
-		if(strcmp(conf_val,"Chinese")==0){
+	}
+	else
+	{
+		GetPrivateProfileStringA("Settings", "language", NULL, conf_val, 300, conf_path);
+		if (strcmp(conf_val, "Chinese") == 0)
+		{
 			SetThreadUILanguage(MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT));
-		}else if(strcmp(conf_val,"English")==0){
+		}
+		else if (strcmp(conf_val, "English") == 0)
+		{
 			SetThreadUILanguage(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT));
 		}
 		return;

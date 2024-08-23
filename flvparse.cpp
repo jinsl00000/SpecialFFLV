@@ -84,9 +84,15 @@ int flvparse(LPVOID lparam, int argc, char* argv[])
 {
 	dlg = (CSpecialFFLVDlg*)lparam;
 	if (argc < 3)
+	{
 		printf("invalid command line\n");
-	else {
-		if ((argc == 4) && (strstr(argv[3], "-s") != NULL)) flags |= FLAG_SEPARATE_AV;
+	}
+	else
+	{
+		if ((argc == 4) && (strstr(argv[3], "-s") != NULL))
+		{
+			flags |= FLAG_SEPARATE_AV;
+		}
 		processfile(argv[1], argv[2]);
 	}
 
@@ -133,7 +139,8 @@ const char* printNalByte(unsigned char p)
 }
 
 //processfile is the central function
-void processfile(char* in_file, char* cue_file) {
+void processfile(char* in_file, char* cue_file)
+{
 	//---------
 	fist_time_a = 0;
 	fist_time_v = 0;
@@ -147,7 +154,8 @@ void processfile(char* in_file, char* cue_file) {
 	printf("Processing [%s] with cue file [%s]\n", in_file, cue_file);
 
 	//open the input file
-	if ((ifh = fopen(in_file, "rb")) == NULL) {
+	if ((ifh = fopen(in_file, "rb")) == NULL)
+	{
 		AfxMessageBox(_T("Failed to open files!"));
 		return;
 	}
@@ -186,7 +194,9 @@ void processfile(char* in_file, char* cue_file) {
 		//extract the tag from the input file
 		fget(ifh, (char*)&tag, sizeof(FLV_TAG_NEW));
 		if (feof(ifh))
+		{
 			break;
+		}
 		//输出Tag信息-----------------------
 		int temp_datasize = tag.DataSize[0] * 65536 + tag.DataSize[1] * 256 + tag.DataSize[2];
 		int temp_timestamp = tag.TimestampExtend * 16777216 + tag.Timestamp[0] * 65536 + tag.Timestamp[1] * 256 + tag.Timestamp[2];
@@ -203,14 +213,16 @@ void processfile(char* in_file, char* cue_file) {
 			CodecID = temp_tag_f_b & 0x0F;
 			//倒回去，不影响下面的操作
 			fseek(ifh, -1, SEEK_CUR);
-			if (fist_time_v == 0) {
+			if (fist_time_v == 0)
+			{
 				dlg->ParseTagData_fb(9, temp_tag_f_b);
 				fist_time_v = 1;
 			}
 		}
 		else if (tag.TagType == TAG_TYPE_AUDIO)
 		{
-			if (fist_time_a == 0) {
+			if (fist_time_a == 0)
+			{
 				char temp_tag_f_b;
 				fget(ifh, &temp_tag_f_b, 1);
 				dlg->ParseTagData_fb(8, temp_tag_f_b);
@@ -223,8 +235,8 @@ void processfile(char* in_file, char* cue_file) {
 		{
 #if 1
 			fist_time_s = 0;
-			if (fist_time_s == 0) {
-
+			if (fist_time_s == 0)
+			{
 				fist_time_s = 1;
 				int metasize = reverse_bytes((byte*)&tag.DataSize, sizeof(tag.DataSize));
 				unsigned char* meta_date = new unsigned char[metasize];
@@ -381,7 +393,8 @@ void processfile(char* in_file, char* cue_file) {
 		dlg->AppendTLInfo(tag.TagType, temp_datasize, temp_timestamp, temp_StreamID, video_type, headbyte, nal_unit_type, spsstr, ppsstr);
 		delete[]headbyte;
 		//skip the data of this tag
-		//if (!feof(ifh)) {
+		//if (!feof(ifh))
+		//{
 		fseek(ifh, reverse_bytes((byte*)&tag.DataSize, sizeof(tag.DataSize)), SEEK_CUR);
 		//}
 	} while (!feof(ifh));
@@ -397,7 +410,8 @@ void processfile(char* in_file, char* cue_file) {
 
 
 //fget - fill a buffer or structure with bytes from a file
-uint fget(FILE* fh, char* p, uint s) {
+uint fget(FILE* fh, char* p, uint s)
+{
 	uint i;
 	for (i = 0; i < s; i++)
 		*(p + i) = (char)fgetc(fh);
@@ -405,7 +419,8 @@ uint fget(FILE* fh, char* p, uint s) {
 }
 
 //fput - write a buffer or structure to file
-uint fput(FILE* fh, char* p, uint s) {
+uint fput(FILE* fh, char* p, uint s)
+{
 	uint i;
 	for (i = 0; i < s; i++)
 		fputc(*(p + i), fh);
@@ -413,7 +428,8 @@ uint fput(FILE* fh, char* p, uint s) {
 }
 
 //utility function to overwrite memory
-uint copymem(char* d, char* s, uint c) {
+uint copymem(char* d, char* s, uint c)
+{
 	uint i;
 	for (i = 0; i < c; i++)
 		*(d + i) = *(s + i);
@@ -421,7 +437,8 @@ uint copymem(char* d, char* s, uint c) {
 }
 
 //reverse_bytes - turn a BigEndian byte array into a LittleEndian integer
-uint reverse_bytes(byte* p, char c) {
+uint reverse_bytes(byte* p, char c)
+{
 	int r = 0;
 	int i;
 	for (i = 0; i < c; i++)
@@ -430,14 +447,16 @@ uint reverse_bytes(byte* p, char c) {
 }
 
 //xfer - transfers *count* bytes from an input file to an output file
-uint xfer(FILE* ifh, FILE* ofh, uint c) {
+uint xfer(FILE* ifh, FILE* ofh, uint c)
+{
 	uint i;
 	for (i = 0; i < c; i++)
 		fputc(fgetc(ifh), ofh);
 	return i;
 }
 
-uint xfer_empty(FILE* ifh, FILE* ofh, uint c) {
+uint xfer_empty(FILE* ifh, FILE* ofh, uint c)
+{
 	uint i;
 	for (i = 0; i < c; i++)
 		fgetc(ifh);
@@ -445,8 +464,8 @@ uint xfer_empty(FILE* ifh, FILE* ofh, uint c) {
 }
 
 //This function handles iterative file naming and opening
-FILE* open_output_file(byte tag) {
-
+FILE* open_output_file(byte tag)
+{
 	//instantiate two buffers
 	char file_name[_MAX_PATH], ext[4];
 
@@ -462,7 +481,8 @@ FILE* open_output_file(byte tag) {
 }
 
 //read in the cue points from file in a list format
-uint* read_cue_file(char* fn) {
+uint* read_cue_file(char* fn)
+{
 	FILE* cfh;
 	uint ms, n, count = 0;
 	char sLine[13];
@@ -473,20 +493,20 @@ uint* read_cue_file(char* fn) {
 	uint* p = (uint*)malloc((uint)4);
 
 	//try opening the cue file
-	if ((cfh = fopen(fn, "r")) != NULL) {
-
+	if ((cfh = fopen(fn, "r")) != NULL)
+	{
 		//grab the first string
 		n = fscanf(cfh, "%12s", sLine);
 
 		//loop until there are no more strings
-		while (n == 1) {
-
+		while (n == 1)
+		{
 			//reset milliseconds
 			ms = 0;
 
 			//check to see if in timestamp format
-			if ((sLine[2] == ':') && (sLine[5] == ':') && (sLine[8] == ':')) {
-
+			if ((sLine[2] == ':') && (sLine[5] == ':') && (sLine[8] == ':'))
+			{
 				//replace the colons with tabs
 				sLine[2] = '\t'; sLine[5] = '\t'; sLine[8] = '\t';
 
@@ -497,8 +517,8 @@ uint* read_cue_file(char* fn) {
 				ms = (ts[0] * 3600 + ts[1] * 60 + ts[2]) * 1000 + ts[3];
 
 			}
-			else {
-
+			else
+			{
 				//just see if there is a decimal notation of milliseconds
 				sscanf(sLine, "%f", &ts_f);
 				ms = (uint)ts_f * 1000;
@@ -506,11 +526,13 @@ uint* read_cue_file(char* fn) {
 			}
 
 			//if a cuepoint was found on this line
-			if (ms > 0) {
-
+			if (ms > 0)
+			{
 				//dynamically reallocate memory space as necessary
 				if (count % CUE_BLOCK_SIZE == 0)
+				{
 					p = (uint*)realloc(p, (uint)((count + CUE_BLOCK_SIZE) * sizeof(int)));
+				}
 
 				//set the cue value
 				*(p + count++) = ms;

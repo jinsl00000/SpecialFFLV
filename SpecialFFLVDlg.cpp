@@ -264,15 +264,18 @@ void CSpecialFFLVDlg::OnBnClickedFFlvInputurlOpen()
 }
 //添加一条记录
 //每个字段的含义：类型，数据大小，时间戳，streamid，data的第一个字节
-int CSpecialFFLVDlg::AppendTLInfo(int type, int datasize, int timestamp, int streamid, int keyframe, const unsigned char* headbyte, const char* nal_unit_type, const char* sps, const char* pps) {
+int CSpecialFFLVDlg::AppendTLInfo(int type, int datasize, int timestamp, int streamid, int keyframe, const unsigned char* headbyte, const char* nal_unit_type, const char* sps, const char* pps)
+{
 	//如果选择了“最多输出5000条”，判断是否超过5000条
-	if (m_fflvtaglistmaxnum.GetCheck() == 1 && tl_index > 5000) {
+	if (m_fflvtaglistmaxnum.GetCheck() == 1 && tl_index > 5000)
+	{
 		return 0;
 	}
 	CString temp_index, temp_type, temp_datasize, temp_timestamp, temp_streamid, temp_keyframe,
 		temp_headbyte, temp_nal_unit_type, temp_sps, temp_pps;
 	int nIndex = 0;
-	switch (type) {
+	switch (type)
+	{
 	case 8:
 		text.LoadString(IDS_LIST_DATA_TYPE_AUDIO); break;
 	case 9:
@@ -323,34 +326,41 @@ int CSpecialFFLVDlg::AppendTLInfo(int type, int datasize, int timestamp, int str
 
 	return TRUE;
 }
-int CSpecialFFLVDlg::AppendBInfo(CString dst_group, CString property_name, CString value, CString remark) {
-	if (dst_group.Compare(_T("Header")) == 0) {
+int CSpecialFFLVDlg::AppendBInfo(CString dst_group, CString property_name, CString value, CString remark)
+{
+	if (dst_group.Compare(_T("Header")) == 0)
+	{
 		Headergroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
 	}
-	else if (dst_group.Compare(_T("TagData_fb")) == 0) {
+	else if (dst_group.Compare(_T("TagData_fb")) == 0)
+	{
 		TagData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
 	}
-	else if (dst_group.Compare(_T("ScriptData")) == 0) {
+	else if (dst_group.Compare(_T("ScriptData")) == 0)
+	{
 		ScriptData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
 	}
-	else {
-
+	else
+	{
 	}
 	return TRUE;
 }
-int CSpecialFFLVDlg::ShowBInfo() {
+int CSpecialFFLVDlg::ShowBInfo()
+{
 	m_fflvbasicinfo.AddProperty(Headergroup);
 	m_fflvbasicinfo.AddProperty(TagData_fbgroup);
 	m_fflvbasicinfo.AddProperty(ScriptData_fbgroup);
 	return TRUE;
 }
 //解析TagData的第一个字节
-int CSpecialFFLVDlg::ParseTagData_fb(int type, char data_f_b) {
+int CSpecialFFLVDlg::ParseTagData_fb(int type, char data_f_b)
+{
 	CString temp_v_frametype, temp_v_codec, temp_a_format, temp_a_rate, temp_a_size, temp_a_type;
 	int x;
 
 
-	switch (type) {
+	switch (type)
+	{
 	case 8: {
 		text.LoadString(IDS_UNKNOWN);
 		x = data_f_b & 0xF0;
@@ -513,7 +523,8 @@ int CSpecialFFLVDlg::ParseScriptArrayData(const unsigned char* meta)
 	ecma_array_len |= *p;
 	p++;
 
-	for (i = 0; i < ecma_array_len; i++) {
+	for (i = 0; i < ecma_array_len; i++)
+	{
 		keyname_len = 0;
 		keyname_len |= *p;
 		p++;
@@ -531,7 +542,8 @@ int CSpecialFFLVDlg::ParseScriptArrayData(const unsigned char* meta)
 	}
 	delete[]keyname;
 
-	if (*p == 0 && *(p + 1) == 0 && *(p + 2) == 9) {
+	if (*p == 0 && *(p + 1) == 0 && *(p + 2) == 9)
+	{
 		p += 3;
 	}
 	return p - meta;
@@ -579,7 +591,8 @@ int CSpecialFFLVDlg::ParseScriptType(const unsigned char* meta, const char* name
 	CString strTemp;
 	CString strLongTemp;
 
-	switch (*p) {
+	switch (*p)
+	{
 	case Number:
 		//MessageBox("Number");
 		p++;
@@ -591,7 +604,8 @@ int CSpecialFFLVDlg::ParseScriptType(const unsigned char* meta, const char* name
 	case Boolean:
 		//MessageBox("Boolean");
 		p++;
-		if (*p != 0x00) {
+		if (*p != 0x00)
+		{
 			boolValue = true;
 		}
 		strOutTemp.Format("%s", boolValue ? "true" : "false");
@@ -709,8 +723,10 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 {
 	const unsigned char* p = meta;
 	int ret = 0;
-	while (p) {
-		if (p - meta >= meta_size) {
+	while (p)
+	{
+		if (p - meta >= meta_size)
+		{
 			break;
 		}
 		ret = ParseScriptType(p, "");
@@ -726,8 +742,8 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 	//unsigned char string_output[512];
 	char* string_output = new char[0xffff + 1];
 
-	if (meta[offset++] == 0x08) {
-
+	if (meta[offset++] == 0x08)
+	{
 		arrayLen |= meta[offset++];
 		arrayLen = arrayLen << 8;
 		arrayLen |= meta[offset++];
@@ -738,13 +754,15 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 
 		//cerr << "ArrayLen = " << arrayLen << endl;
 	}
-	else {
+	else
+	{
 		//TODO:
 		//cerr << "metadata format error!!!" << endl;
 		return -1;
 	}
 
-	for (unsigned int i = 0; i < arrayLen; i++) {
+	for (unsigned int i = 0; i < arrayLen; i++)
+	{
 		CString strOutTemp;
 		CString strTemp;
 		CString strLongTemp;
@@ -766,7 +784,8 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 		delete[]keyname;
 #ifdef DEBUG
 		printf("\norign \n");
-		for (unsigned int i = 0; i < nameLen + 3; i++) {
+		for (unsigned int i = 0; i < nameLen + 3; i++)
+		{
 			printf("%x ", meta[offset + i]);
 		}
 		printf("\n");
@@ -775,12 +794,14 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 		//cerr << "name=" << name << " ";
 #ifdef DEBUG
 		printf("memcpy\n");
-		for (unsigned int i = 0; i < nameLen; i++) {
+		for (unsigned int i = 0; i < nameLen; i++)
+		{
 			printf("%x ", name[i]);
 		}
 		printf("\n");
 #endif
-		switch (meta[offset++]) {
+		switch (meta[offset++])
+		{
 		case 0x0: //Number type
 			numValue = read_be64double((unsigned char*)(meta + offset));
 			strOutTemp.Format("%.2f", numValue);
@@ -788,7 +809,8 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 			break;
 
 		case 0x1: //Boolean type
-			if (offset++ != 0x00) {
+			if (offset++ != 0x00)
+			{
 				boolValue = true;
 			}
 			strOutTemp.Format("%s", boolValue ? "true" : "false");
@@ -829,37 +851,48 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 		AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
 
 #if 0
-		if (strncmp(name, "duration", 8) == 0) {
+		if (strncmp(name, "duration", 8) == 0)
+		{
 			m_duration = numValue;
 		}
-		else if (strncmp(name, "width", 5) == 0) {
+		else if (strncmp(name, "width", 5) == 0)
+		{
 			m_width = numValue;
 		}
-		else if (strncmp(name, "height", 6) == 0) {
+		else if (strncmp(name, "height", 6) == 0)
+		{
 			m_height = numValue;
 		}
-		else if (strncmp(name, "framerate", 9) == 0) {
+		else if (strncmp(name, "framerate", 9) == 0)
+		{
 			m_framerate = numValue;
 		}
-		else if (strncmp(name, "videodatarate", 13) == 0) {
+		else if (strncmp(name, "videodatarate", 13) == 0)
+		{
 			m_videodatarate = numValue;
 		}
-		else if (strncmp(name, "audiodatarate", 13) == 0) {
+		else if (strncmp(name, "audiodatarate", 13) == 0)
+		{
 			m_audiodatarate = numValue;
 		}
-		else if (strncmp(name, "videocodecid", 12) == 0) {
+		else if (strncmp(name, "videocodecid", 12) == 0)
+		{
 			m_videocodecid = numValue;
 		}
-		else if (strncmp(name, "audiosamplerate", 15) == 0) {
+		else if (strncmp(name, "audiosamplerate", 15) == 0)
+		{
 			m_audiosamplerate = numValue;
 		}
-		else if (strncmp(name, "audiosamplesize", 15) == 0) {
+		else if (strncmp(name, "audiosamplesize", 15) == 0)
+		{
 			m_audiosamplesize = numValue;
 		}
-		else if (strncmp(name, "audiocodecid", 12) == 0) {
+		else if (strncmp(name, "audiocodecid", 12) == 0)
+		{
 			m_audiocodecid = numValue;
 		}
-		else if (strncmp(name, "stereo", 6) == 0) {
+		else if (strncmp(name, "stereo", 6) == 0)
+		{
 			m_stereo = boolValue;
 		}
 #endif
@@ -868,7 +901,8 @@ int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 
 }
 
-void CSpecialFFLVDlg::SystemClear() {
+void CSpecialFFLVDlg::SystemClear()
+{
 	Headergroup->RemoveAllOptions();
 	TagData_fbgroup->RemoveAllOptions();
 	ScriptData_fbgroup->RemoveAllOptions();
@@ -907,7 +941,6 @@ void CSpecialFFLVDlg::OnCustomdrawMyList(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
 	{
-
 		COLORREF clrNewTextColor, clrNewBkColor;
 
 		int    nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
@@ -919,7 +952,8 @@ void CSpecialFFLVDlg::OnCustomdrawMyList(NMHDR* pNMHDR, LRESULT* pResult)
 		text_audio.LoadString(IDS_LIST_DATA_TYPE_AUDIO);
 		text_script.LoadString(IDS_LIST_DATA_TYPE_SCRIPT);
 
-		if (strTemp.Compare(text_video) == 0) {
+		if (strTemp.Compare(text_video) == 0)
+		{
 			clrNewTextColor = RGB(0, 0, 0);		//Set the text
 			if (0 == key_strTemp.Compare("1"))
 			{
@@ -930,15 +964,18 @@ void CSpecialFFLVDlg::OnCustomdrawMyList(NMHDR* pNMHDR, LRESULT* pResult)
 				clrNewBkColor = RGB(0, 255, 255);		//青色
 			}
 		}
-		else if (strTemp.Compare(text_audio) == 0) {
+		else if (strTemp.Compare(text_audio) == 0)
+		{
 			clrNewTextColor = RGB(0, 0, 0);		//text 
 			clrNewBkColor = RGB(255, 255, 0);		//黄色
 		}
-		else if (strTemp.Compare(text_script) == 0) {
+		else if (strTemp.Compare(text_script) == 0)
+		{
 			clrNewTextColor = RGB(0, 0, 0);		//text
 			clrNewBkColor = RGB(255, 153, 0);		//咖啡色
 		}
-		else {
+		else
+		{
 			clrNewTextColor = RGB(0, 0, 0);		//text
 			clrNewBkColor = RGB(255, 255, 255);			//白色
 		}

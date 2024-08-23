@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * FLV 格式分析器
  * FLV Format Analysis
  *
@@ -8,13 +8,13 @@
  * 中国传媒大学/数字电视技术
  * Communication University of China / Digital TV Technology
  * http://blog.csdn.net/leixiaohua1020
- * 
+ *
  * FLV封装格式分析工具
  * FLV Container Format Analysis Tools
- * 
- * 
+ *
+ *
  */
 #include "stdafx.h"
 #include "SpecialFFLVDlg.h"
 
-int flvparse(LPVOID lparam,int argc, char* argv[]);
+int flvparse(LPVOID lparam, int argc, char* argv[]);
