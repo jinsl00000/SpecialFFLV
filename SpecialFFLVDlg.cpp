@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * FLV 格式分析器
  * FLV Format Analysis
  *
@@ -8,11 +8,11 @@
  * 中国传媒大学/数字电视技术
  * Communication University of China / Digital TV Technology
  * http://blog.csdn.net/leixiaohua1020
- * 
+ *
  * FLV封装格式分析工具
  * FLV Container Format Analysis Tools
- * 
- * 
+ *
+ *
  */
 #include <stdint.h>
 #include "stdafx.h"
@@ -25,17 +25,17 @@
 #endif
 
 
-// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+ // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 	enum { IDD = IDD_ABOUTBOX };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 // 实现
@@ -80,7 +80,7 @@ void CSpecialFFLVDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CSpecialFFLVDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_F_FLV_INPUTURL_OPEN, &CSpecialFFLVDlg::OnBnClickedFFlvInputurlOpen)
-	ON_NOTIFY ( NM_CUSTOMDRAW,IDC_F_FLV_TAGLIST, OnCustomdrawMyList )
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_F_FLV_TAGLIST, OnCustomdrawMyList)
 	ON_BN_CLICKED(IDC_F_FLV_ABOUT, &CSpecialFFLVDlg::OnBnClickedFFlvAbout)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
@@ -115,26 +115,31 @@ BOOL CSpecialFFLVDlg::OnInitDialog()
 		}
 	}
 	//整行选择；有表格线；表头；单击激活
-	DWORD dwExStyle=LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP|LVS_EX_ONECLICKACTIVATE;
+	DWORD dwExStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP | LVS_EX_ONECLICKACTIVATE;
 	//报表风格；单行选择；高亮显示选择行
 	//视频
-	
 
-	m_fflvtaglist.ModifyStyle(0,LVS_SINGLESEL|LVS_REPORT|LVS_SHOWSELALWAYS);
+
+	m_fflvtaglist.ModifyStyle(0, LVS_SINGLESEL | LVS_REPORT | LVS_SHOWSELALWAYS);
 	m_fflvtaglist.SetExtendedStyle(dwExStyle);
 
 	text.LoadString(IDS_LIST_TITLE_NUM);
-	m_fflvtaglist.InsertColumn(0,text,LVCFMT_CENTER,50,0);
+	m_fflvtaglist.InsertColumn(0, text, LVCFMT_CENTER, 50, 0);
 	text.LoadString(IDS_LIST_TITLE_TYPE);
-	m_fflvtaglist.InsertColumn(1,text,LVCFMT_CENTER,85,0);
+	m_fflvtaglist.InsertColumn(1, text, LVCFMT_CENTER, 85, 0);
 	text.LoadString(IDS_LIST_TITLE_DATASIZE);
-	m_fflvtaglist.InsertColumn(2,text,LVCFMT_CENTER,95,0);
+	m_fflvtaglist.InsertColumn(2, text, LVCFMT_CENTER, 95, 0);
 	text.LoadString(IDS_LIST_TITLE_TIMESTAMP);
-	m_fflvtaglist.InsertColumn(3,text,LVCFMT_CENTER,100,0);
+	m_fflvtaglist.InsertColumn(3, text, LVCFMT_CENTER, 100, 0);
 	text.LoadString(IDS_LIST_TITLE_STREAMID);
-	m_fflvtaglist.InsertColumn(4,text,LVCFMT_CENTER,95,0);
+	m_fflvtaglist.InsertColumn(4, text, LVCFMT_CENTER, 95, 0);
 	text.LoadString(IDS_LIST_DATA_TYPE_VIDEO_KEY);
-	m_fflvtaglist.InsertColumn(5, text, LVCFMT_CENTER, 0, 0);
+	m_fflvtaglist.InsertColumn(5, text, LVCFMT_CENTER, 50, 0);
+	//text.LoadString("asdf");
+	m_fflvtaglist.InsertColumn(6, "nal type", LVCFMT_RIGHT, 100, 0);
+	m_fflvtaglist.InsertColumn(7, "sps", LVCFMT_LEFT, 100, 0);
+	m_fflvtaglist.InsertColumn(8, "pps/len", LVCFMT_RIGHT, 50, 0);
+	m_fflvtaglist.InsertColumn(9, "headbyte", LVCFMT_LEFT, 200, 0);
 
 	//Propertylist初始化------------------------
 	m_fflvbasicinfo.EnableHeaderCtrl(FALSE);
@@ -142,23 +147,23 @@ BOOL CSpecialFFLVDlg::OnInitDialog()
 	m_fflvbasicinfo.SetVSDotNetLook();
 	m_fflvbasicinfo.MarkModifiedProperties();
 	//把第一列调整宽一些-----------------------
-	HDITEM item; 
-	item.cxy=120; 
-	item.mask=HDI_WIDTH; 
-	m_fflvbasicinfo.GetHeaderCtrl().SetItem(0, &item); 
+	HDITEM item;
+	item.cxy = 120;
+	item.mask = HDI_WIDTH;
+	m_fflvbasicinfo.GetHeaderCtrl().SetItem(0, &item);
 
 	//----
-	Headergroup=new CMFCPropertyGridProperty(_T("File Header"));
-	TagData_fbgroup=new CMFCPropertyGridProperty(_T("TagData Header"));
+	Headergroup = new CMFCPropertyGridProperty(_T("File Header"));
+	TagData_fbgroup = new CMFCPropertyGridProperty(_T("TagData Header"));
 	ScriptData_fbgroup = new CMFCPropertyGridProperty(_T("ScriptData"));
 	//-----------
-	tl_index=0;
+	tl_index = 0;
 	m_fflvtaglistmaxnum.SetCheck(1);
 	//-------------
 	m_fflvinputurl.EnableFileBrowseButton(
 		NULL,
 		_T("FLV Files (*.flv)|*.flv|All Files (*.*)|*.*||")
-		);
+	);
 	// 设置此对话框的图标。当应用程序主窗口不是对话框时，框架将自动
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
@@ -234,22 +239,22 @@ void CSpecialFFLVDlg::OnBnClickedFFlvInputurlOpen()
 
 #ifdef _UNICODE
 	USES_CONVERSION;
-	strcpy(fileurl,W2A(strFilePath));
+	strcpy(fileurl, W2A(strFilePath));
 #else
-	strcpy(fileurl,strFilePath);
+	strcpy(fileurl, strFilePath);
 #endif
 
-	int argc=4;
-	char **argv=(char **)malloc(MAX_URL_LENGTH);
-	argv[0]=(char *)malloc(MAX_URL_LENGTH);
-	argv[1]=(char *)malloc(MAX_URL_LENGTH);
-	argv[2]=(char *)malloc(MAX_URL_LENGTH);
-	argv[3]=(char *)malloc(MAX_URL_LENGTH);
-	strcpy(argv[0],"dummy");
-	strcpy(argv[1],fileurl);
-	strcpy(argv[2],"dummy.dat");
-	strcpy(argv[3],"-s");
-	flvparse(this,argc,argv);
+	int argc = 4;
+	char** argv = (char**)malloc(MAX_URL_LENGTH);
+	argv[0] = (char*)malloc(MAX_URL_LENGTH);
+	argv[1] = (char*)malloc(MAX_URL_LENGTH);
+	argv[2] = (char*)malloc(MAX_URL_LENGTH);
+	argv[3] = (char*)malloc(MAX_URL_LENGTH);
+	strcpy(argv[0], "dummy");
+	strcpy(argv[1], fileurl);
+	strcpy(argv[2], "dummy.dat");
+	strcpy(argv[3], "-s");
+	flvparse(this, argc, argv);
 	free(argv[0]);
 	free(argv[1]);
 	free(argv[2]);
@@ -259,24 +264,25 @@ void CSpecialFFLVDlg::OnBnClickedFFlvInputurlOpen()
 }
 //添加一条记录
 //每个字段的含义：类型，数据大小，时间戳，streamid，data的第一个字节
-int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int streamid, int keyframe){
+int CSpecialFFLVDlg::AppendTLInfo(int type, int datasize, int timestamp, int streamid, int keyframe, const unsigned char* headbyte, const char* nal_unit_type, const char* sps, const char* pps) {
 	//如果选择了“最多输出5000条”，判断是否超过5000条
-	if(m_fflvtaglistmaxnum.GetCheck()==1&&tl_index>5000){
+	if (m_fflvtaglistmaxnum.GetCheck() == 1 && tl_index > 5000) {
 		return 0;
 	}
-	CString temp_index,temp_type,temp_datasize,temp_timestamp,temp_streamid, temp_keyframe;
-	int nIndex=0;
-	switch(type){
+	CString temp_index, temp_type, temp_datasize, temp_timestamp, temp_streamid, temp_keyframe,
+		temp_headbyte, temp_nal_unit_type, temp_sps, temp_pps;
+	int nIndex = 0;
+	switch (type) {
 	case 8:
-		text.LoadString(IDS_LIST_DATA_TYPE_AUDIO);break;
+		text.LoadString(IDS_LIST_DATA_TYPE_AUDIO); break;
 	case 9:
-		text.LoadString(IDS_LIST_DATA_TYPE_VIDEO);break;
+		text.LoadString(IDS_LIST_DATA_TYPE_VIDEO); break;
 	case 18:
-		text.LoadString(IDS_LIST_DATA_TYPE_SCRIPT);break;
+		text.LoadString(IDS_LIST_DATA_TYPE_SCRIPT); break;
 	default:
-		text.LoadString(IDS_UNKNOWN);break;
+		text.LoadString(IDS_UNKNOWN); break;
 	}
-	if ((m_fflvtaglist_onlykey.GetCheck() == 0 || (m_fflvtaglist_onlykey.GetCheck() == 1 && keyframe==1)) && (m_fflvtaglist_onlyvideo.GetCheck() == 0 ||(m_fflvtaglist_onlyvideo.GetCheck() == 1 && type == 9)))
+	if ((m_fflvtaglist_onlykey.GetCheck() == 0 || (m_fflvtaglist_onlykey.GetCheck() == 1 && keyframe == 1)) && (m_fflvtaglist_onlyvideo.GetCheck() == 0 || (m_fflvtaglist_onlyvideo.GetCheck() == 1 && type == 9)))
 	{
 		temp_type.Format(_T("%s"), text);
 		temp_index.Format(_T("%d"), tl_index);
@@ -284,6 +290,13 @@ int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int stream
 		temp_timestamp.Format(_T("%d"), timestamp);
 		temp_streamid.Format(_T("%d"), streamid);
 		temp_keyframe.Format(_T("%d"), keyframe);
+		for (int i = 0; i < headbytelen; i++)
+		{
+			temp_headbyte.AppendFormat("%02x ", headbyte[i]);
+		}
+		temp_sps.Format(_T("%s"), sps);
+		temp_pps.Format(_T("%s"), pps);
+		temp_nal_unit_type.Format(_T("%s"), nal_unit_type);
 		//获取当前记录条数
 		nIndex = m_fflvtaglist.GetItemCount();
 		//“行”数据结构
@@ -301,17 +314,23 @@ int CSpecialFFLVDlg::AppendTLInfo(int type,int datasize,int timestamp,int stream
 		m_fflvtaglist.SetItemText(nIndex, 3, temp_timestamp);
 		m_fflvtaglist.SetItemText(nIndex, 4, temp_streamid);
 		m_fflvtaglist.SetItemText(nIndex, 5, temp_keyframe);
+		m_fflvtaglist.SetItemText(nIndex, 6, temp_nal_unit_type);
+		m_fflvtaglist.SetItemText(nIndex, 7, temp_sps);
+		m_fflvtaglist.SetItemText(nIndex, 8, temp_pps);
+		m_fflvtaglist.SetItemText(nIndex, 9, temp_headbyte);
 		tl_index++;
 	}
-	
+
 	return TRUE;
 }
-int CSpecialFFLVDlg::AppendBInfo(CString dst_group,CString property_name,CString value,CString remark){
-	if(dst_group.Compare(_T("Header"))==0){
+int CSpecialFFLVDlg::AppendBInfo(CString dst_group, CString property_name, CString value, CString remark) {
+	if (dst_group.Compare(_T("Header")) == 0) {
 		Headergroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
-	}else if(dst_group.Compare(_T("TagData_fb"))==0){
+	}
+	else if (dst_group.Compare(_T("TagData_fb")) == 0) {
 		TagData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
-	}else if (dst_group.Compare(_T("ScriptData")) == 0) {
+	}
+	else if (dst_group.Compare(_T("ScriptData")) == 0) {
 		ScriptData_fbgroup->AddSubItem(new CMFCPropertyGridProperty(property_name, (_variant_t)value, remark));
 	}
 	else {
@@ -319,111 +338,111 @@ int CSpecialFFLVDlg::AppendBInfo(CString dst_group,CString property_name,CString
 	}
 	return TRUE;
 }
-int CSpecialFFLVDlg::ShowBInfo(){
+int CSpecialFFLVDlg::ShowBInfo() {
 	m_fflvbasicinfo.AddProperty(Headergroup);
 	m_fflvbasicinfo.AddProperty(TagData_fbgroup);
 	m_fflvbasicinfo.AddProperty(ScriptData_fbgroup);
 	return TRUE;
 }
 //解析TagData的第一个字节
-int CSpecialFFLVDlg::ParseTagData_fb(int type,char data_f_b){
-	CString temp_v_frametype,temp_v_codec,temp_a_format,temp_a_rate,temp_a_size,temp_a_type;
+int CSpecialFFLVDlg::ParseTagData_fb(int type, char data_f_b) {
+	CString temp_v_frametype, temp_v_codec, temp_a_format, temp_a_rate, temp_a_size, temp_a_type;
 	int x;
 
 
-	switch(type){
-	case 8:{
+	switch (type) {
+	case 8: {
 		text.LoadString(IDS_UNKNOWN);
-		x=data_f_b&0xF0;
-		x=x>>4;
+		x = data_f_b & 0xF0;
+		x = x >> 4;
 		switch (x)
 		{
-		case 0:temp_a_format.Format(_T("Linear PCM, platform endian"));break;
-		case 1:temp_a_format.Format(_T("ADPCM"));break;
-		case 2:temp_a_format.Format(_T("MP3"));break;
-		case 3:temp_a_format.Format(_T("Linear PCM, little endian"));break;
-		case 4:temp_a_format.Format(_T("Nellymoser 16-kHz mono"));break;
-		case 5:temp_a_format.Format(_T("Nellymoser 8-kHz mono"));break;
-		case 6:temp_a_format.Format(_T("Nellymoser"));break;
-		case 7:temp_a_format.Format(_T("G.711 A-law logarithmic PCM"));break;
-		case 8:temp_a_format.Format(_T("G.711 mu-law logarithmic PCM"));break;
-		case 9:temp_a_format.Format(_T("reserved"));break;
-		case 10:temp_a_format.Format(_T("AAC"));break;
-		case 11:temp_a_format.Format(_T("Speex"));break;
-		case 14:temp_a_format.Format(_T("MP3 8-Khz"));break;
-		case 15:temp_a_format.Format(_T("Device-specific sound"));break;
-		default:temp_a_format.Format(_T("%s"),text);break;
+		case 0:temp_a_format.Format(_T("Linear PCM, platform endian")); break;
+		case 1:temp_a_format.Format(_T("ADPCM")); break;
+		case 2:temp_a_format.Format(_T("MP3")); break;
+		case 3:temp_a_format.Format(_T("Linear PCM, little endian")); break;
+		case 4:temp_a_format.Format(_T("Nellymoser 16-kHz mono")); break;
+		case 5:temp_a_format.Format(_T("Nellymoser 8-kHz mono")); break;
+		case 6:temp_a_format.Format(_T("Nellymoser")); break;
+		case 7:temp_a_format.Format(_T("G.711 A-law logarithmic PCM")); break;
+		case 8:temp_a_format.Format(_T("G.711 mu-law logarithmic PCM")); break;
+		case 9:temp_a_format.Format(_T("reserved")); break;
+		case 10:temp_a_format.Format(_T("AAC")); break;
+		case 11:temp_a_format.Format(_T("Speex")); break;
+		case 14:temp_a_format.Format(_T("MP3 8-Khz")); break;
+		case 15:temp_a_format.Format(_T("Device-specific sound")); break;
+		default:temp_a_format.Format(_T("%s"), text); break;
 		}
-		x=data_f_b&0x0C;
-		x=x>>2;
+		x = data_f_b & 0x0C;
+		x = x >> 2;
 		switch (x)
 		{
-		case 0:temp_a_rate.Format(_T("5.5-kHz"));break;
-		case 1:temp_a_rate.Format(_T("1-kHz"));break;
-		case 2:temp_a_rate.Format(_T("22-kHz"));break;
-		case 3:temp_a_rate.Format(_T("44-kHz"));break;
-		default:temp_a_rate.Format(_T("%s"),text);break;
+		case 0:temp_a_rate.Format(_T("5.5-kHz")); break;
+		case 1:temp_a_rate.Format(_T("1-kHz")); break;
+		case 2:temp_a_rate.Format(_T("22-kHz")); break;
+		case 3:temp_a_rate.Format(_T("44-kHz")); break;
+		default:temp_a_rate.Format(_T("%s"), text); break;
 		}
-		x=data_f_b&0x02;
-		x=x>>1;
+		x = data_f_b & 0x02;
+		x = x >> 1;
 		switch (x)
 		{
-		case 0:temp_a_size.Format(_T("8Bit"));break;
-		case 1:temp_a_size.Format(_T("16Bit"));break;
-		default:temp_a_size.Format(_T("%s"),text);break;
+		case 0:temp_a_size.Format(_T("8Bit")); break;
+		case 1:temp_a_size.Format(_T("16Bit")); break;
+		default:temp_a_size.Format(_T("%s"), text); break;
 		}
-		x=data_f_b&0x01;
+		x = data_f_b & 0x01;
 		switch (x)
 		{
-		case 0:temp_a_type.Format(_T("Mono"));break;
-		case 1:temp_a_type.Format(_T("Stereo"));break;
-		default:temp_a_type.Format(_T("%s"),text);break;
+		case 0:temp_a_type.Format(_T("Mono")); break;
+		case 1:temp_a_type.Format(_T("Stereo")); break;
+		default:temp_a_type.Format(_T("%s"), text); break;
 		}
 
 
 		text.LoadString(IDS_INFO_TAG_AUDIOCODEC);
-		AppendBInfo(_T("TagData_fb"),text.GetBuffer(),temp_a_format,text.GetBuffer());
+		AppendBInfo(_T("TagData_fb"), text.GetBuffer(), temp_a_format, text.GetBuffer());
 		text.LoadString(IDS_INFO_TAG_AUDIO_SFMT);
-		AppendBInfo(_T("TagData_fb"),text.GetBuffer(),temp_a_rate,text.GetBuffer());
+		AppendBInfo(_T("TagData_fb"), text.GetBuffer(), temp_a_rate, text.GetBuffer());
 		text.LoadString(IDS_INFO_TAG_AUDIO_SR);
-		AppendBInfo(_T("TagData_fb"),text.GetBuffer(),temp_a_size,text.GetBuffer());
+		AppendBInfo(_T("TagData_fb"), text.GetBuffer(), temp_a_size, text.GetBuffer());
 		text.LoadString(IDS_INFO_TAG_AUDIO_TYPE);
-		AppendBInfo(_T("TagData_fb"),text.GetBuffer(),temp_a_type,text.GetBuffer());
+		AppendBInfo(_T("TagData_fb"), text.GetBuffer(), temp_a_type, text.GetBuffer());
 
 		break;
-		   }
-	case 9:{
+	}
+	case 9: {
 		text.LoadString(IDS_UNKNOWN);
-		x=data_f_b&0xF0;
-		x=x>>4;
+		x = data_f_b & 0xF0;
+		x = x >> 4;
 		switch (x)
 		{
-		case 1:temp_v_frametype.Format(_T("keyframe (for AVC, a seekable frame)"));break;
-		case 2:temp_v_frametype.Format(_T("inter frame (for AVC, a nonseekable frame)"));break;
-		case 3:temp_v_frametype.Format(_T("disposable inter frame (H.263 only)"));break;
-		case 4:temp_v_frametype.Format(_T("generated keyframe (reserved for server use only)"));break;
-		case 5:temp_v_frametype.Format(_T("video info/command frame"));break;
-		default:temp_v_frametype.Format(_T("%s"),text);break;
+		case 1:temp_v_frametype.Format(_T("keyframe (for AVC, a seekable frame)")); break;
+		case 2:temp_v_frametype.Format(_T("inter frame (for AVC, a nonseekable frame)")); break;
+		case 3:temp_v_frametype.Format(_T("disposable inter frame (H.263 only)")); break;
+		case 4:temp_v_frametype.Format(_T("generated keyframe (reserved for server use only)")); break;
+		case 5:temp_v_frametype.Format(_T("video info/command frame")); break;
+		default:temp_v_frametype.Format(_T("%s"), text); break;
 		}
-		x=data_f_b&0x0F;
+		x = data_f_b & 0x0F;
 		switch (x)
 		{
-		case 1:temp_v_codec.Format(_T("JPEG (currently unused)"));break;
-		case 2:temp_v_codec.Format(_T("Sorenson H.263"));break;
-		case 3:temp_v_codec.Format(_T("Screen video"));break;
-		case 4:temp_v_codec.Format(_T("On2 VP6"));break;
-		case 5:temp_v_codec.Format(_T("On2 VP6 with alpha channel"));break;
-		case 6:temp_v_codec.Format(_T("Screen video version 2"));break;
-		case 7:temp_v_codec.Format(_T("AVC"));break;
-		default:temp_v_codec.Format(_T("%s"),text);break;
+		case 1:temp_v_codec.Format(_T("JPEG (currently unused)")); break;
+		case 2:temp_v_codec.Format(_T("Sorenson H.263")); break;
+		case 3:temp_v_codec.Format(_T("Screen video")); break;
+		case 4:temp_v_codec.Format(_T("On2 VP6")); break;
+		case 5:temp_v_codec.Format(_T("On2 VP6 with alpha channel")); break;
+		case 6:temp_v_codec.Format(_T("Screen video version 2")); break;
+		case 7:temp_v_codec.Format(_T("AVC")); break;
+		default:temp_v_codec.Format(_T("%s"), text); break;
 		}
 		text.LoadString(IDS_INFO_TAG_VIDEOCODEC);
-		
 
-		AppendBInfo(_T("TagData_fb"),text,temp_v_codec,text);
+
+		AppendBInfo(_T("TagData_fb"), text, temp_v_codec, text);
 
 		break;
-		   }
+	}
 	case 18:
 		break;
 	default:break;
@@ -447,7 +466,7 @@ int is_little_endian(void)
 }
 
 
-double read_be64double(unsigned char *data)
+double read_be64double(unsigned char* data)
 {
 	double value;
 	unsigned char number_data[8];
@@ -472,18 +491,20 @@ double read_be64double(unsigned char *data)
 	return value;
 }
 
-int CSpecialFFLVDlg::ParseScriptArrayData(const char * meta)
+int CSpecialFFLVDlg::ParseScriptArrayData(const unsigned char* meta)
 {
 	int ecma_array_len = 0;
 	int keyname_len = 0;
-	char keyname[32];
-	const char *p = meta;
+	//char keyname[32];
+	char* keyname = new char[0xffff + 1];
+	memset(keyname, 0, 0xffff + 1);
+	const unsigned char* p = (unsigned char*)meta;
 	int i = 0;
 
 	ecma_array_len |= *p;
 	p++;
 	ecma_array_len = ecma_array_len << 8;
-	ecma_array_len |=*p;
+	ecma_array_len |= *p;
 	p++;
 	ecma_array_len = ecma_array_len << 8;
 	ecma_array_len |= *p;
@@ -499,12 +520,16 @@ int CSpecialFFLVDlg::ParseScriptArrayData(const char * meta)
 		keyname_len = keyname_len << 8;
 		keyname_len |= *p;
 		p++;
-
-		memset(keyname, 0, sizeof(keyname));
-		strncpy((char *)keyname, (const char *)p, keyname_len);
+		if (keyname_len > 0xffff + 1)
+		{
+			MessageBox("error len");
+		}
+		memset(keyname, 0, 0xffff + 1);
+		strncpy((char*)keyname, (const char*)p, keyname_len);
 		p += keyname_len;
 		p += ParseScriptType(p, keyname);
 	}
+	delete[]keyname;
 
 	if (*p == 0 && *(p + 1) == 0 && *(p + 2) == 9) {
 		p += 3;
@@ -529,11 +554,22 @@ enum script_data_type {
 	LongString,
 };
 
-int CSpecialFFLVDlg::ParseScriptType(const char * meta, const char * name)
+int CSpecialFFLVDlg::ParseScriptType(const unsigned char* meta, const char* namep)
 {
+	char name[1024] = { 0 };
+	if (!namep || strlen(namep) == 0)
+	{
+		strcpy(name, "EMPTY_STR");
+	}
+	else
+	{
+		strcpy(name, namep);
+	}
+	//MessageBox(name);
 	int ret = 0;
-	const char *p = meta;
-	char string_output[512];
+	const unsigned char* p = meta;
+	//char string_output[512];
+	char* string_output = new char[0xffff + 1];
 	unsigned long long number = 0;
 	double double_number = 0.0;
 
@@ -545,13 +581,15 @@ int CSpecialFFLVDlg::ParseScriptType(const char * meta, const char * name)
 
 	switch (*p) {
 	case Number:
+		//MessageBox("Number");
 		p++;
-		numValue = read_be64double((unsigned char *)(p));
+		numValue = read_be64double((unsigned char*)(p));
 		strOutTemp.Format("%.2f", numValue);
 		p += 8;
 		break;
 
 	case Boolean:
+		//MessageBox("Boolean");
 		p++;
 		if (*p != 0x00) {
 			boolValue = true;
@@ -562,57 +600,70 @@ int CSpecialFFLVDlg::ParseScriptType(const char * meta, const char * name)
 		break;
 
 	case String:
+		//MessageBox("String");
 		p++;
 		ret |= *p;
 		p++;
 		ret = ret << 8;
 		ret |= *p;
 		p++;
-		memset(string_output, 0, sizeof(string_output));
-		strncpy((char *)string_output, (const char *)(p), ret);
+		memset(string_output, 0, 0xffff + 1);
+		strncpy(string_output, (const char*)(p), ret);
 		strOutTemp = string_output;
 		p += ret;
 		break;
 
 	case Object:
+		//MessageBox("Object");
 		p++;
 		break;
 
 	case MovieClip:
+		//MessageBox("MovieClip");
 		p++;
 		break;
 
 	case Null:
+		//MessageBox("Null");
 		p++;
 		break;
 
 	case Undefined:
+		//MessageBox("Undefined");
 		p++;
 		break;
 
 	case Reference:
+		//MessageBox("Reference");
 		p++;
 		break;
 
 	case EcmaArray:
+		//MessageBox("EcmaArray");
 		p++;
 		ret = ParseScriptArrayData(p);
 		p += ret;
 		break;
 
 	case ObjectEndMarker:
+		//MessageBox("ObjectEndMarker");
 		p++;
 		break;
 
 	case StringArray:
+		//MessageBox("StringArray");
 		p++;
 		break;
 
 	case Date:
+		//MessageBox("Date");
 		p++;
+		p += 10;
+		strOutTemp = "type date not impl";
 		break;
 
 	case LongString:
+		//MessageBox("LongString");
 		p++;
 		ret = 0;
 		ret |= *p;
@@ -626,24 +677,37 @@ int CSpecialFFLVDlg::ParseScriptType(const char * meta, const char * name)
 		ret = ret << 8;
 		ret |= *p;
 		p++;
-		memset(string_output, 0, sizeof(string_output));
-		strncpy((char *)string_output, (const char *)(p), ret);
-		strOutTemp = string_output;
+		if (ret > 0xffff)
+		{
+			memset(string_output, 0, 0xffff + 1);
+			strncpy((char*)string_output, (const char*)(p), ret);
+			strOutTemp = string_output;
+		}
+		else
+		{
+			strOutTemp = "too long";
+		}
 		p += ret;
 		break;
 
 	default:
-
+		strOutTemp.Format("default type %02X", *p);
+		p++;
 		break;
 	}
-	if(NULL != name || strOutTemp.GetLength()>0)
-		AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
+	if (strOutTemp.GetLength() == 0)
+	{
+		strOutTemp = "EMPTY_STR";
+	}
+	AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
+
+	delete[]string_output;
 	return p - meta;
 }
 
-int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
+int CSpecialFFLVDlg::ParseScriptData(const unsigned char* meta, int meta_size)
 {
-	const char * p = meta;
+	const unsigned char* p = meta;
 	int ret = 0;
 	while (p) {
 		if (p - meta >= meta_size) {
@@ -659,7 +723,8 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 	unsigned int nameLen = 0;
 	double numValue = 0;
 	bool boolValue = false;
-	unsigned char string_output[512];
+	//unsigned char string_output[512];
+	char* string_output = new char[0xffff + 1];
 
 	if (meta[offset++] == 0x08) {
 
@@ -692,11 +757,13 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 		nameLen = nameLen << 8;
 		nameLen |= meta[offset++];
 		//cerr << "name length=" << nameLen << " ";
-		unsigned char keyname[32];
-		memset(keyname, 0, sizeof(keyname));
-		strncpy((char *)keyname, (const char *)(meta+ offset), nameLen);
-	//	fprintf(stdout, "keyname = [%s]\n", keyname);
+		//unsigned char keyname[32];
+		char* keyname = new char[0xffff + 1];
+		memset(keyname, 0, 0xffff + 1);
+		strncpy((char*)keyname, (const char*)(meta + offset), nameLen);
+		//	fprintf(stdout, "keyname = [%s]\n", keyname);
 		CString name(keyname);
+		delete[]keyname;
 #ifdef DEBUG
 		printf("\norign \n");
 		for (unsigned int i = 0; i < nameLen + 3; i++) {
@@ -715,7 +782,7 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 #endif
 		switch (meta[offset++]) {
 		case 0x0: //Number type
-			numValue = read_be64double((unsigned char *)(meta + offset));
+			numValue = read_be64double((unsigned char*)(meta + offset));
 			strOutTemp.Format("%.2f", numValue);
 			offset += 8;
 			break;
@@ -724,7 +791,7 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 			if (offset++ != 0x00) {
 				boolValue = true;
 			}
-			strOutTemp.Format("%s", boolValue?"true":"false");
+			strOutTemp.Format("%s", boolValue ? "true" : "false");
 			break;
 
 		case 0x2: //String type
@@ -732,9 +799,9 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 			nameLen |= meta[offset++];
 			nameLen = nameLen << 8;
 			nameLen |= meta[offset++];
-			strTemp = CString(meta[offset], nameLen);
-			memset(string_output, 0, sizeof(string_output));
-			strncpy((char *)string_output, (const char *)(meta+offset), nameLen);
+			strTemp = CString((char*)meta[offset], nameLen);
+			memset(string_output, 0, 0xffff + 1);
+			strncpy((char*)string_output, (const char*)(meta + offset), nameLen);
 			strOutTemp = string_output;
 			offset += nameLen;
 			break;
@@ -748,8 +815,8 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 			nameLen |= meta[offset++];
 			nameLen = nameLen << 8;
 			nameLen |= meta[offset++];
-			memset(string_output, 0, sizeof(string_output));
-			strncpy((char *)string_output, (const char *)(meta + offset), nameLen);
+			memset(string_output, 0, 0xffff + 1);
+			strncpy((char*)string_output, (const char*)(meta + offset), nameLen);
 			strOutTemp = string_output;
 			offset += nameLen;
 			break;
@@ -758,6 +825,7 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 		default:
 			break;
 		}
+		delete[]string_output;
 		AppendBInfo(_T("ScriptData"), name, strOutTemp, name);
 
 #if 0
@@ -800,60 +868,60 @@ int CSpecialFFLVDlg::ParseScriptData(const char * meta, int meta_size)
 
 }
 
-void CSpecialFFLVDlg::SystemClear(){
+void CSpecialFFLVDlg::SystemClear() {
 	Headergroup->RemoveAllOptions();
 	TagData_fbgroup->RemoveAllOptions();
 	ScriptData_fbgroup->RemoveAllOptions();
 
 
-	Headergroup=new CMFCPropertyGridProperty(_T("Header"));
-	TagData_fbgroup=new CMFCPropertyGridProperty(_T("TagData Header"));
+	Headergroup = new CMFCPropertyGridProperty(_T("Header"));
+	TagData_fbgroup = new CMFCPropertyGridProperty(_T("TagData Header"));
 	ScriptData_fbgroup = new CMFCPropertyGridProperty(_T("ScriptData"));
 	m_fflvbasicinfo.RemoveAll();
 	m_fflvtaglist.DeleteAllItems();
-	tl_index=0;
+	tl_index = 0;
 }
 //ListCtrl加颜色
-void CSpecialFFLVDlg::OnCustomdrawMyList ( NMHDR* pNMHDR, LRESULT* pResult )
+void CSpecialFFLVDlg::OnCustomdrawMyList(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	//This code based on Michael Dunn's excellent article on
 	//list control custom draw at http://www.codeproject.com/listctrl/lvcustomdraw.asp
 
-	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>( pNMHDR );
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
 
 	// Take the default processing unless we set this to something else below.
 	*pResult = CDRF_DODEFAULT;
 
 	// First thing - check the draw stage. If it's the control's prepaint
 	// stage, then tell Windows we want messages for every item.
-	if ( CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage )
+	if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)
 	{
 		*pResult = CDRF_NOTIFYITEMDRAW;
 	}
-	else if ( CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage )
+	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
 	{
 		// This is the notification message for an item.  We'll request
 		// notifications before each subitem's prepaint stage.
 
 		*pResult = CDRF_NOTIFYSUBITEMDRAW;
 	}
-	else if ( (CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage )
+	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
 	{
 
 		COLORREF clrNewTextColor, clrNewBkColor;
 
-		int    nItem = static_cast<int>( pLVCD->nmcd.dwItemSpec );
+		int    nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
 
-		CString strTemp = m_fflvtaglist.GetItemText(nItem,1);
+		CString strTemp = m_fflvtaglist.GetItemText(nItem, 1);
 		CString key_strTemp = m_fflvtaglist.GetItemText(nItem, 5);
-		CString text_video,text_audio,text_script;
+		CString text_video, text_audio, text_script;
 		text_video.LoadString(IDS_LIST_DATA_TYPE_VIDEO);
 		text_audio.LoadString(IDS_LIST_DATA_TYPE_AUDIO);
 		text_script.LoadString(IDS_LIST_DATA_TYPE_SCRIPT);
 
-		if(strTemp.Compare(text_video)==0){
-			clrNewTextColor = RGB(0,0,0);		//Set the text
-			if (0 ==key_strTemp.Compare("1"))
+		if (strTemp.Compare(text_video) == 0) {
+			clrNewTextColor = RGB(0, 0, 0);		//Set the text
+			if (0 == key_strTemp.Compare("1"))
 			{
 				clrNewBkColor = RGB(255, 0, 0);		//青色
 			}
@@ -862,16 +930,17 @@ void CSpecialFFLVDlg::OnCustomdrawMyList ( NMHDR* pNMHDR, LRESULT* pResult )
 				clrNewBkColor = RGB(0, 255, 255);		//青色
 			}
 		}
-		else if(strTemp.Compare(text_audio)==0){
-			clrNewTextColor = RGB(0,0,0);		//text 
-			clrNewBkColor = RGB(255,255,0);		//黄色
+		else if (strTemp.Compare(text_audio) == 0) {
+			clrNewTextColor = RGB(0, 0, 0);		//text 
+			clrNewBkColor = RGB(255, 255, 0);		//黄色
 		}
-		else if(strTemp.Compare(text_script)==0){
-			clrNewTextColor = RGB(0,0,0);		//text
-			clrNewBkColor = RGB(255,153,0);		//咖啡色
-		}else{
-			clrNewTextColor = RGB(0,0,0);		//text
-			clrNewBkColor = RGB(255,255,255);			//白色
+		else if (strTemp.Compare(text_script) == 0) {
+			clrNewTextColor = RGB(0, 0, 0);		//text
+			clrNewBkColor = RGB(255, 153, 0);		//咖啡色
+		}
+		else {
+			clrNewTextColor = RGB(0, 0, 0);		//text
+			clrNewBkColor = RGB(255, 255, 255);			//白色
 		}
 
 		pLVCD->clrText = clrNewTextColor;
@@ -896,8 +965,8 @@ void CSpecialFFLVDlg::OnDropFiles(HDROP hDropInfo)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	CDialogEx::OnDropFiles(hDropInfo);
-	LPTSTR pFilePathName =(LPTSTR)malloc(MAX_URL_LENGTH);
-	::DragQueryFile(hDropInfo, 0, pFilePathName,MAX_URL_LENGTH);  // 获取拖放文件的完整文件名，最关键！
+	LPTSTR pFilePathName = (LPTSTR)malloc(MAX_URL_LENGTH);
+	::DragQueryFile(hDropInfo, 0, pFilePathName, MAX_URL_LENGTH);  // 获取拖放文件的完整文件名，最关键！
 	m_fflvinputurl.SetWindowText(pFilePathName);
 	::DragFinish(hDropInfo);   // 注意这个不能少，它用于释放Windows 为处理文件拖放而分配的内存
 	free(pFilePathName);

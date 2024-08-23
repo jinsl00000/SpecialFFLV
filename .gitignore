@@ -1,9 +1,11 @@
-#¹ıÂË
+
 Debug/
 Release/
-#¹ıÂË
+
 *.sdf
 .vs/
 ipch/
 *.db
 *.dat
+*.vcxproj.user
+*.suo
